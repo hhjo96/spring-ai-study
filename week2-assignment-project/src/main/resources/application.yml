@@ -24,7 +24,7 @@ spring:
       chat:
         options:
           # llama3.2, mistral, gemma2, gpt-oss:120b 등
-          model: llama3.2
+          model: llama3
           temperature: 0.7
 
 server:
