@@ -22,7 +22,7 @@ public class BookService {
         this.chatClient = chatClient;
     }
 
-    // TODO 1: 도서 추천 기능 구현 (Ch2 - 텍스트 대화)
+    // 도서 추천 기능 구현 (Ch2 - 텍스트 대화)
     public String recommendBooks(BookRecommendRequest request) {
         String prompt = systemPrompt + String.format("%s 장르의 %s 분위기 책을 %d권 추천해줘. 각 책의 제목, 저자, 간단한 소개를 적어줘."
                 ,request.genre(), request.mood(), request.count());
@@ -34,7 +34,7 @@ public class BookService {
         return chatClient.prompt().user(prompt).call().content();
     }
 
-    // TODO 2: 도서 분석 기능 구현 (Ch3 - 프롬프트 템플릿)
+    // 도서 분석 기능 구현 (Ch3 - 프롬프트 템플릿)
     public String analyzeBook(BookAnalysisRequest request) {
 
         //var 타입 자동결정(컴파일러가 추론)
@@ -48,7 +48,7 @@ public class BookService {
         return chatClient.prompt(prompt).call().content();
     }
 
-    // TODO 3: 구조화된 도서 추천 기능 구현 (Ch4 - 구조화된 출력)
+    // 구조화된 도서 추천 기능 구현 (Ch4 - 구조화된 출력)
     public List<BookRecommendation> getStructuredRecommendations(BookRecommendRequest request) {
         String prompt =  systemPrompt + String.format(
                 "%s 장르의 %s 분위기 책을 %d권 추천해줘.",
@@ -63,7 +63,7 @@ public class BookService {
 
     }
 
-    // TODO 4: 제로-샷 도서 분류 기능 구현 (프롬프트 엔지니어링)
+    // 제로-샷 도서 분류 기능 구현 (프롬프트 엔지니어링)
     public String classifyBookZeroShot(String bookDescription) {
         String prompt = systemPrompt + """
             너는 도서 분류 전문가야.
@@ -98,7 +98,7 @@ public class BookService {
                 .content();
     }
 
-    // TODO 5: 스텝-백 도서 분석 기능 구현 (프롬프트 엔지니어링)
+    // 스텝-백 도서 분석 기능 구현 (프롬프트 엔지니어링)
     public String analyzeWithStepBack(String title, String question) {
         String stepBackPrompt = systemPrompt + String.format("""
             '%s'라는 책과 관련된 질문에 답하기 전에,
