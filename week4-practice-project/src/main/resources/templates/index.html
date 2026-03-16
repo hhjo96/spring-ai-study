@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal AI Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a0d1e 30%, #1a1025 70%, #0f0f1a 100%);
+            min-height: 100vh;
+            color: #e5e7eb;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-top: 20px;
+        }
+
+        .header-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(236,72,153,0.3);
+        }
+
+        .header-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .module-info {
+            color: #f43f5e;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .nav-border {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(244, 63, 94, 0.1) 100%);
+            border-bottom: 2px solid #ec4899;
+            color: #f472b6;
+        }
+
+        .tab-inactive {
+            border-bottom: 2px solid transparent;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+
+        .tab-inactive:hover {
+            color: #d1d5db;
+            background: rgba(236, 72, 153, 0.05);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(236, 72, 153, 0.2);
+            border-top: 3px solid #ec4899;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .response-area {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 120px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .error-text { color: #f87171; }
+        .success-text { color: #34d399; }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: rgba(236, 72, 153, 0.5);
+            box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.1);
+        }
+
+        .input-field::placeholder { color: #6b7280; }
+
+        textarea.input-field {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        select.input-field {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        select.input-field option {
+            background: #1e1e2e;
+            color: #fff;
+        }
+
+        input[type="file"].input-field { padding: 8px 14px; }
+
+        input[type="file"].input-field::file-selector-button {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            margin-right: 12px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.15);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tab-scroll::-webkit-scrollbar { height: 2px; }
+        .tab-scroll::-webkit-scrollbar-track { background: transparent; }
+        .tab-scroll::-webkit-scrollbar-thumb { background: rgba(236, 72, 153, 0.3); border-radius: 4px; }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        }
+
+        .generated-image {
+            border-radius: 8px;
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border: 1px solid rgba(236, 72, 153, 0.2);
+        }
+
+        audio { width: 100%; border-radius: 8px; margin-top: 8px; }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            background: rgba(236, 72, 153, 0.15);
+            color: #f472b6;
+            border: 1px solid rgba(236, 72, 153, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+    <div class="header-badge">M</div>
+    <h1 class="header-title">Multimodal AI Lab</h1>
+    <p class="subtitle">이미지/오디오 분석, 이미지 생성, TTS & STT 실습</p>
+</header>
+
+<!-- Main Content -->
+<main style="max-width: 1200px; margin: 0 auto; padding: 24px;">
+
+    <!-- Tab Navigation -->
+    <div class="tab-scroll" style="display: flex; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0; margin-bottom: 24px; overflow-x: auto;">
+        <button class="tab-active" onclick="switchTab(this, 'tab-analyze-url')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">Vision (URL)</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-analyze-upload')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">Vision (Upload)</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-structured')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">구조화 분석</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-generate')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">이미지 생성</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-code')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">코드 분석</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-tts')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">TTS</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-stt')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">STT</button>
+        <button class="tab-inactive" onclick="switchTab(this, 'tab-assistant')" style="padding: 10px 16px; font-size: 13px; font-weight: 500; border: none; background: none; cursor: pointer; white-space: nowrap; border-radius: 8px 8px 0 0;">음성 비서</button>
+    </div>
+
+    <!-- Tab 1: Vision (URL) -->
+    <div id="tab-analyze-url" class="tab-panel">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#128065;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">이미지 분석 (URL)</h2>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">ChatClient + Media</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="text" id="imageUrl" placeholder="https://example.com/image.png" class="input-field">
+                    <textarea id="question" placeholder="이 이미지에 대해 분석해주세요..." class="input-field"></textarea>
+                    <button class="btn-primary" onclick="analyzeImageByUrl()">분석 시작</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">분석 결과</p>
+                    <div id="analyzeUrlResult" class="response-area">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Vision (Upload) -->
+    <div id="tab-analyze-upload" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#128228;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">이미지 업로드 분석</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">로컬 이미지 파일을 업로드하여 분석합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">MultipartFile + ByteArrayResource</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="file" id="uploadFile" accept="image/*" class="input-field">
+                    <textarea id="uploadQuestion" placeholder="이 이미지에 대해 분석해주세요..." class="input-field"></textarea>
+                    <button class="btn-primary" onclick="analyzeImageByUpload()">업로드 &amp; 분석</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">분석 결과</p>
+                    <div id="uploadResult" class="response-area">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Structured Analysis -->
+    <div id="tab-structured" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#128202;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">구조화 분석</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">entity()로 이미지 분석 결과를 JSON 객체로 반환합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">entity(Class)</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="text" id="structuredUrl" placeholder="https://example.com/image.png" class="input-field">
+                    <button class="btn-primary" onclick="analyzeStructured()">구조화 분석</button>
+                    <div style="padding: 12px; background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.1); border-radius: 8px; font-size: 12px; color: #9ca3af;">
+                        <strong style="color: #f472b6;">반환 필드:</strong> description, objects, mood, colors, tags
+                    </div>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">구조화 결과 (JSON)</p>
+                    <div id="structuredResult" class="response-area">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Image Generation -->
+    <div id="tab-generate" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#127912;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">이미지 생성 (DALL-E)</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">텍스트 프롬프트로 DALL-E 이미지를 생성합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">ImageModel + DALL-E 3</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <textarea id="generatePrompt" placeholder="생성할 이미지를 설명해주세요..." class="input-field" style="min-height: 100px;"></textarea>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <select id="imageQuality" class="input-field">
+                            <option value="standard">Standard</option>
+                            <option value="hd">HD</option>
+                        </select>
+                        <select id="imageSize" class="input-field">
+                            <option value="1024x1024" selected>1024x1024</option>
+                            <option value="1024x1792">1024x1792 (세로)</option>
+                            <option value="1792x1024">1792x1024 (가로)</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="generateImage()">이미지 생성</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">생성 결과</p>
+                    <div id="generatedImageResult" class="response-area" style="display: flex; align-items: center; justify-content: center; min-height: 200px;">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: Code Analysis -->
+    <div id="tab-code" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#128187;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">코드 스크린샷 분석</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">코드 캡처 이미지를 분석하여 언어, 요약, 개선점을 제시합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">Vision API</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="file" id="codeFile" accept="image/*" class="input-field">
+                    <button class="btn-primary" onclick="analyzeCode()">코드 분석</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">분석 결과</p>
+                    <div id="codeResult" class="response-area">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 6: TTS -->
+    <div id="tab-tts" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#128266;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">텍스트 음성 변환 (TTS)</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">OpenAI TTS 모델로 텍스트를 음성으로 변환합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">TextToSpeechPrompt</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <textarea id="ttsText" placeholder="음성으로 변환할 텍스트를 입력하세요..." class="input-field"></textarea>
+                    <select id="voiceSelect" class="input-field">
+                        <option value="nova" selected>Nova (밝고 따뜻한 여성)</option>
+                        <option value="shimmer">Shimmer (차분한 여성)</option>
+                        <option value="alloy">Alloy (중성적, 안내톤)</option>
+                        <option value="onyx">Onyx (낮은 남성)</option>
+                        <option value="echo">Echo (남성적)</option>
+                        <option value="fable">Fable (이야기체)</option>
+                    </select>
+                    <button class="btn-primary" onclick="textToSpeech()">음성 생성</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">생성된 오디오</p>
+                    <div id="ttsResult" class="response-area" style="display: flex; align-items: center; justify-content: center;">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 7: STT -->
+    <div id="tab-stt" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#127908;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">음성 텍스트 변환 (STT)</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">Whisper 모델로 음성 파일을 텍스트로 변환합니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">AudioTranscriptionPrompt</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="file" id="audioFile" accept="audio/*" class="input-field">
+                    <button class="btn-primary" onclick="speechToText()">음성 인식</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">인식 결과</p>
+                    <div id="sttResult" class="response-area">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 8: Voice Assistant -->
+    <div id="tab-assistant" class="tab-panel" style="display: none;">
+        <div class="glass" style="border-radius: 12px; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <div class="section-icon badge-gradient">&#129302;</div>
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">음성 비서</h2>
+                    <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">ChatClient + TTS를 결합한 음성 응답 비서입니다</p>
+                </div>
+                <span class="feature-tag" style="margin-left: auto;">Chat + TTS Pipeline</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <textarea id="assistantQuestion" placeholder="질문을 입력하면 음성으로 답변합니다..." class="input-field" style="min-height: 100px;"></textarea>
+                    <button class="btn-primary" onclick="voiceAssistant()">음성 응답 받기</button>
+                </div>
+                <div>
+                    <p style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">음성 응답</p>
+                    <div id="assistantResult" class="response-area" style="display: flex; align-items: center; justify-content: center;">결과가 여기에 표시됩니다...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    // Tab Switching
+    function switchTab(button, tabId) {
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.style.display = 'none'; });
+        document.querySelectorAll('[onclick^="switchTab"]').forEach(function(b) { b.className = 'tab-inactive'; });
+        document.getElementById(tabId).style.display = 'block';
+        button.className = 'tab-active';
+    }
+
+    // Utilities
+    function showLoading(elementId) {
+        document.getElementById(elementId).innerHTML = '<div style="display: flex; align-items: center; gap: 10px; color: #f472b6;"><div class="loading-spinner"></div> AI가 처리 중입니다...</div>';
+    }
+
+    function showError(elementId, message) {
+        document.getElementById(elementId).innerHTML = '<span class="error-text">' + escapeHtml(message) + '</span>';
+    }
+
+    function showResult(elementId, content) {
+        var el = document.getElementById(elementId);
+        if (typeof content === 'string') {
+            el.innerHTML = escapeHtml(content);
+        } else {
+            el.innerHTML = '<pre style="margin:0; white-space: pre-wrap;">' + JSON.stringify(content, null, 2) + '</pre>';
+        }
+    }
+
+    function escapeHtml(text) {
+        var map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    async function parseError(res) {
+        try {
+            var json = await res.json();
+            return json.error || '요청 처리 중 오류가 발생했습니다.';
+        } catch (e) {
+            return await res.text() || '요청 처리 중 오류가 발생했습니다.';
+        }
+    }
+
+    // API Functions
+    async function analyzeImageByUrl() {
+        var imageUrl = document.getElementById('imageUrl').value;
+        var question = document.getElementById('question').value;
+        if (!imageUrl || !question) { showError('analyzeUrlResult', 'URL과 질문을 모두 입력하세요'); return; }
+        showLoading('analyzeUrlResult');
+        try {
+            var res = await fetch('/api/image/analyze/url', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({imageUrl: imageUrl, question: question}) });
+            if (!res.ok) throw new Error(await parseError(res));
+            showResult('analyzeUrlResult', await res.text());
+        } catch (e) { showError('analyzeUrlResult', e.message); }
+    }
+
+    async function analyzeImageByUpload() {
+        var file = document.getElementById('uploadFile').files[0];
+        var question = document.getElementById('uploadQuestion').value;
+        if (!file || !question) { showError('uploadResult', '파일과 질문을 모두 입력하세요'); return; }
+        showLoading('uploadResult');
+        var fd = new FormData(); fd.append('file', file); fd.append('question', question);
+        try {
+            var res = await fetch('/api/image/analyze/upload', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error(await parseError(res));
+            showResult('uploadResult', await res.text());
+        } catch (e) { showError('uploadResult', e.message); }
+    }
+
+    async function analyzeStructured() {
+        var imageUrl = document.getElementById('structuredUrl').value;
+        if (!imageUrl) { showError('structuredResult', 'URL을 입력하세요'); return; }
+        showLoading('structuredResult');
+        try {
+            var res = await fetch('/api/image/analyze/url/structured', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({imageUrl: imageUrl}) });
+            if (!res.ok) throw new Error(await parseError(res));
+            showResult('structuredResult', await res.json());
+        } catch (e) { showError('structuredResult', e.message); }
+    }
+
+    async function generateImage() {
+        var prompt = document.getElementById('generatePrompt').value;
+        var quality = document.getElementById('imageQuality').value;
+        var size = document.getElementById('imageSize').value;
+        if (!prompt) { showError('generatedImageResult', '이미지 설명을 입력하세요'); return; }
+        showLoading('generatedImageResult');
+        try {
+            var res = await fetch('/api/image/generate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prompt: prompt, quality: quality, size: size}) });
+            if (!res.ok) throw new Error(await parseError(res));
+            var result = await res.json();
+            if (result.imageUrl) {
+                document.getElementById('generatedImageResult').innerHTML =
+                    '<div style="text-align:center;"><img src="' + result.imageUrl + '" alt="Generated" class="generated-image"><p style="margin-top:8px; font-size:11px; color:#6b7280;">Prompt: ' + escapeHtml(result.revisedPrompt || prompt) + '</p></div>';
+            } else {
+                showError('generatedImageResult', '이미지 생성 실패');
+            }
+        } catch (e) { showError('generatedImageResult', e.message); }
+    }
+
+    async function analyzeCode() {
+        var file = document.getElementById('codeFile').files[0];
+        if (!file) { showError('codeResult', '코드 스크린샷 파일을 선택하세요'); return; }
+        showLoading('codeResult');
+        var fd = new FormData(); fd.append('file', file);
+        try {
+            var res = await fetch('/api/image/analyze/code', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error(await parseError(res));
+            showResult('codeResult', await res.text());
+        } catch (e) { showError('codeResult', e.message); }
+    }
+
+    async function textToSpeech() {
+        var text = document.getElementById('ttsText').value;
+        var voice = document.getElementById('voiceSelect').value;
+        if (!text) { showError('ttsResult', '텍스트를 입력하세요'); return; }
+        showLoading('ttsResult');
+        try {
+            var res = await fetch('/api/speech/tts', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text, voice: voice}) });
+            if (!res.ok) throw new Error(await parseError(res));
+            var blob = await res.blob();
+            var url = URL.createObjectURL(blob);
+            document.getElementById('ttsResult').innerHTML = '<div style="width:100%;"><audio controls style="width:100%;"><source src="' + url + '" type="audio/mpeg"></audio><p style="margin-top:8px; font-size:11px; color:#6b7280;">Voice: ' + voice + ' | ' + text.length + '자</p></div>';
+        } catch (e) { showError('ttsResult', e.message); }
+    }
+
+    async function speechToText() {
+        var file = document.getElementById('audioFile').files[0];
+        if (!file) { showError('sttResult', '오디오 파일을 선택하세요'); return; }
+        showLoading('sttResult');
+        var fd = new FormData(); fd.append('file', file);
+        try {
+            var res = await fetch('/api/speech/stt', { method: 'POST', body: fd });
+            if (!res.ok) throw new Error(await parseError(res));
+            showResult('sttResult', await res.text());
+        } catch (e) { showError('sttResult', e.message); }
+    }
+
+    async function voiceAssistant() {
+        var question = document.getElementById('assistantQuestion').value;
+        if (!question) { showError('assistantResult', '질문을 입력하세요'); return; }
+        showLoading('assistantResult');
+        try {
+            var res = await fetch('/api/speech/assistant', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({question: question}) });
+            if (!res.ok) throw new Error(await parseError(res));
+            var blob = await res.blob();
+            var url = URL.createObjectURL(blob);
+            document.getElementById('assistantResult').innerHTML = '<div style="width:100%;"><audio controls style="width:100%;"><source src="' + url + '" type="audio/mpeg"></audio><p style="margin-top:8px; font-size:11px; color:#6b7280;">질문: ' + escapeHtml(question) + '</p></div>';
+        } catch (e) { showError('assistantResult', e.message); }
+    }
+</script>
+</body>
+</html>
