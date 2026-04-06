@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: week8-practice-project
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-proj-xxxxxxxxxx}
+      chat:
+        options:
+          model: gpt-4.1-nano
+      embedding:
+        options:
+          model: text-embedding-ada-002
+    vectorstore:
+      pgvector:
+        dimensions: 1536
+        distance-type: cosine_distance
+        index-type: hnsw
+        initialize-schema: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app_vector_db
+    username: app_user
+    password: app_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.ai: DEBUG
+    org.springframework.ai.chat.client.advisor: DEBUG
+    com.study.week6: DEBUG

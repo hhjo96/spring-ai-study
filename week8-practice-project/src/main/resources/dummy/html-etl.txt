@@ -1,0 +1,14 @@
+1. Spring 공식 문서
+제목: Spring AI 소개
+저자: Spring
+URL: https://docs.spring.io/spring-ai/reference/
+
+2. 위키백과 - 인공지능
+제목: 인공지능
+저자: Wikipedia
+URL: https://ko.wikipedia.org/wiki/인공지능
+
+3. 위키백과 - 자연어 처리
+제목: 자연어 처리
+저자: Wikipedia
+URL: https://ko.wikipedia.org/wiki/자연어_처리

@@ -1,0 +1,114 @@
+코스모스 AI 어시스턴트 v3.0 제품 가이드
+
+1. 제품 개요
+
+코스모스 AI 어시스턴트 v3.0은 기업용 AI 비서 솔루션입니다. 자연어 처리 기술을 기반으로 업무 자동화, 문서 분석, 일정 관리, 데이터 분석 등 다양한 기능을 제공합니다.
+
+2. 주요 기능
+
+2.1 스마트 문서 분석
+- PDF, Word, Excel, PowerPoint 등 다양한 문서 형식 지원
+- 문서 요약, 핵심 키워드 추출, 감성 분석 기능
+- 다국어 문서 번역 (한국어, 영어, 일본어, 중국어 지원)
+- 문서 내 표와 차트 자동 인식 및 데이터 추출
+
+2.2 업무 자동화
+- 이메일 자동 분류 및 우선순위 설정
+- 반복 업무 자동화 (RPA 연동)
+- 보고서 자동 생성 (일간, 주간, 월간)
+- 미팅 요약 및 액션 아이템 자동 추출
+
+2.3 일정 관리
+- 캘린더 연동 (Google Calendar, Outlook)
+- 최적 미팅 시간 자동 추천
+- 마감일 알림 및 리마인더
+- 팀 일정 조율 및 충돌 감지
+
+2.4 데이터 분석
+- 자연어 쿼리로 데이터베이스 조회
+- 실시간 대시보드 생성
+- 트렌드 분석 및 예측
+- 이상치 탐지 및 알림
+
+3. 시스템 요구사항
+
+3.1 서버 요구사항
+- CPU: 8코어 이상 (16코어 권장)
+- RAM: 32GB 이상 (64GB 권장)
+- 스토리지: SSD 500GB 이상
+- GPU: NVIDIA A100 또는 동급 이상 (AI 추론 가속용)
+
+3.2 소프트웨어 요구사항
+- 운영체제: Ubuntu 22.04 LTS 또는 RHEL 9
+- Docker: 24.0 이상
+- Kubernetes: 1.28 이상 (클러스터 배포 시)
+- PostgreSQL: 16 이상
+
+3.3 네트워크 요구사항
+- 최소 대역폭: 100Mbps
+- 권장 대역폭: 1Gbps
+- SSL/TLS 인증서 필요
+- 방화벽 포트: 443 (HTTPS), 8080 (API), 5432 (DB)
+
+4. 설치 가이드
+
+4.1 Docker 설치
+docker pull cosmostech/ai-assistant:3.0
+docker run -d --name cosmos-ai -p 8080:8080 -p 443:443 cosmostech/ai-assistant:3.0
+
+4.2 환경 변수 설정
+- COSMOS_LICENSE_KEY: 라이선스 키
+- COSMOS_DB_URL: 데이터베이스 접속 URL
+- COSMOS_AI_MODEL: 사용할 AI 모델 (기본값: cosmos-gpt-3.0)
+- COSMOS_LANGUAGE: 기본 언어 설정 (기본값: ko)
+
+5. API 명세
+
+5.1 문서 분석 API
+- POST /api/v3/document/analyze
+- 요청 형식: multipart/form-data
+- 파라미터: file (필수), language (선택), analysisType (선택)
+- 응답: JSON 형식의 분석 결과
+
+5.2 대화 API
+- POST /api/v3/chat
+- 요청 형식: application/json
+- 파라미터: message (필수), sessionId (선택), context (선택)
+- 응답: JSON 형식의 AI 응답
+
+5.3 데이터 분석 API
+- POST /api/v3/data/query
+- 요청 형식: application/json
+- 파라미터: query (필수), dataSource (필수), format (선택)
+- 응답: JSON 형식의 쿼리 결과
+
+6. 가격 정책
+
+6.1 Basic 플랜 (월 500,000원)
+- 사용자 수: 최대 10명
+- API 호출: 월 10,000회
+- 문서 분석: 월 100건
+- 기본 지원 (이메일)
+
+6.2 Professional 플랜 (월 2,000,000원)
+- 사용자 수: 최대 50명
+- API 호출: 월 100,000회
+- 문서 분석: 월 1,000건
+- 우선 지원 (이메일 + 전화)
+- 커스텀 모델 훈련 1회/분기
+
+6.3 Enterprise 플랜 (별도 협의)
+- 사용자 수: 무제한
+- API 호출: 무제한
+- 문서 분석: 무제한
+- 전담 매니저 배정
+- 온프레미스 배포 지원
+- 커스텀 모델 훈련 무제한
+- SLA 99.9% 보장
+
+7. 기술 지원
+
+- 이메일: support@cosmostech.co.kr
+- 전화: 02-1234-5678 (평일 09:00~18:00)
+- 긴급 장애: 02-1234-5679 (24시간)
+- 기술 문서: docs.cosmostech.co.kr

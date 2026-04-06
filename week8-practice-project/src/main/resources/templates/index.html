@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG & Tool Calling Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .tab-active { background: rgba(99,102,241,0.3); border-color: rgba(99,102,241,0.6); }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .loading { display: none; }
+        .loading.show { display: flex; }
+    </style>
+</head>
+<body class="text-gray-200 p-6">
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+        Practice - RAG & Tool Calling
+    </h1>
+    <p class="text-center text-gray-400 mb-6">RAG & Tool Calling</p>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 mb-6 justify-center">
+        <button onclick="showTab('etl')" id="tab-etl" class="tab-btn px-4 py-2 rounded-lg glass text-sm hover:bg-indigo-500/20 transition">ETL 파이프라인</button>
+        <button onclick="showTab('rag')" id="tab-rag" class="tab-btn px-4 py-2 rounded-lg glass text-sm hover:bg-indigo-500/20 transition">RAG 채팅</button>
+        <button onclick="showTab('datetime')" id="tab-datetime" class="tab-btn px-4 py-2 rounded-lg glass text-sm hover:bg-indigo-500/20 transition">날짜/시간 도구</button>
+        <button onclick="showTab('weather')" id="tab-weather" class="tab-btn px-4 py-2 rounded-lg glass text-sm hover:bg-indigo-500/20 transition">날씨 도구</button>
+        <button onclick="showTab('booking')" id="tab-booking" class="tab-btn px-4 py-2 rounded-lg glass text-sm hover:bg-indigo-500/20 transition">회의실 예약</button>
+    </div>
+
+    <!-- ========== ETL Tab ========== -->
+    <div id="panel-etl" class="tab-panel hidden">
+        <div class="glass rounded-2xl p-6 mb-4">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">ETL 파이프라인 (Extract-Transform-Load)</h2>
+
+            <!-- 벡터 저장소 초기화 -->
+            <div class="mb-6 p-4 rounded-lg bg-red-900/20 border border-red-800/30">
+                <h3 class="text-sm font-semibold text-red-300 mb-2">벡터 저장소 초기화</h3>
+                <button onclick="clearVectorStore()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition">초기화</button>
+                <span id="clear-result" class="ml-3 text-sm text-gray-400"></span>
+            </div>
+
+            <!-- 파일 업로드 ETL -->
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-indigo-300 mb-3">파일 업로드 ETL (txt, pdf, doc, docx)</h3>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="etl-title" type="text" placeholder="문서 제목" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                    <input id="etl-author" type="text" placeholder="저자" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                </div>
+                <input id="etl-file" type="file" accept=".txt,.pdf,.doc,.docx" class="text-sm mb-3 block">
+                <button onclick="etlFromFile()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">ETL 실행</button>
+            </div>
+
+            <!-- HTML ETL -->
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold text-indigo-300 mb-3">HTML ETL</h3>
+                <div class="grid grid-cols-3 gap-3 mb-3">
+                    <input id="html-title" type="text" placeholder="문서 제목" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                    <input id="html-author" type="text" placeholder="저자" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                    <input id="html-url" type="text" placeholder="URL" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                </div>
+                <button onclick="etlFromHtml()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">HTML ETL 실행</button>
+            </div>
+
+            <div id="etl-loading" class="loading items-center gap-2 mt-4"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm">처리 중...</span></div>
+            <div id="etl-result" class="mt-4 p-3 rounded-lg bg-gray-800/50 text-sm hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========== RAG Tab ========== -->
+    <div id="panel-rag" class="tab-panel hidden">
+        <div class="glass rounded-2xl p-6">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">RAG 채팅</h2>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <select id="rag-type" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                    <option value="basic">QuestionAnswerAdvisor (기본)</option>
+                    <option value="compression">CompressionQueryTransformer (압축)</option>
+                    <option value="rewrite">RewriteQueryTransformer (재작성)</option>
+                    <option value="translation">TranslationQueryTransformer (번역)</option>
+                    <option value="multiQuery">MultiQueryExpander (다중 쿼리)</option>
+                </select>
+                <input id="rag-source" type="text" placeholder="소스 필터 - ETL한 파일명 입력 (예: sample-company-policy.txt)" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <input id="rag-score" type="number" value="0.5" min="0" max="1" step="0.1" placeholder="유사도 임계 점수" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+                <input id="rag-conversation-id" type="text" placeholder="대화 ID (compression용)" value="user-robbie-01" class="bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none">
+            </div>
+            <textarea id="rag-question" rows="3" placeholder="질문을 입력하세요..." class="w-full bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none mb-3"></textarea>
+            <button onclick="ragChat()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">질문하기</button>
+
+            <div id="rag-loading" class="loading items-center gap-2 mt-4"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm">답변 생성 중...</span></div>
+            <div id="rag-result" class="mt-4 p-4 rounded-lg bg-gray-800/50 text-sm hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========== DateTime Tool Tab ========== -->
+    <div id="panel-datetime" class="tab-panel hidden">
+        <div class="glass rounded-2xl p-6">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">날짜/시간 도구 (Tool Calling)</h2>
+            <p class="text-gray-400 text-sm mb-4">@Tool: getCurrentDateTime(), setAlarm()</p>
+            <textarea id="dt-question" rows="3" placeholder="예: 지금 몇 시야? / 내일 오전 7시에 알람 설정해줘" class="w-full bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none mb-3"></textarea>
+            <button onclick="toolChat('datetime')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">질문하기</button>
+
+            <div id="dt-loading" class="loading items-center gap-2 mt-4"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm">처리 중...</span></div>
+            <div id="dt-result" class="mt-4 p-4 rounded-lg bg-gray-800/50 text-sm hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========== Weather Tool Tab ========== -->
+    <div id="panel-weather" class="tab-panel hidden">
+        <div class="glass rounded-2xl p-6">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">날씨 도구 (Tool Calling)</h2>
+            <p class="text-gray-400 text-sm mb-4">@Tool: getWeather(), compareWeather()</p>
+            <textarea id="weather-question" rows="3" placeholder="예: 서울 날씨 어때? / 서울이랑 부산 날씨 비교해줘" class="w-full bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none mb-3"></textarea>
+            <button onclick="toolChat('weather')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">질문하기</button>
+
+            <div id="weather-loading" class="loading items-center gap-2 mt-4"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm">처리 중...</span></div>
+            <div id="weather-result" class="mt-4 p-4 rounded-lg bg-gray-800/50 text-sm hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========== Booking Tool Tab ========== -->
+    <div id="panel-booking" class="tab-panel hidden">
+        <div class="glass rounded-2xl p-6">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">회의실 예약 (ToolContext 활용)</h2>
+            <p class="text-gray-400 text-sm mb-4">@Tool + ToolContext: listRooms(), getBookings(), bookRoom(), cancelBooking()</p>
+            <input id="booking-username" type="text" value="Robbie" placeholder="사용자 이름" class="w-full bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none mb-3">
+            <textarea id="booking-question" rows="3" placeholder="예: 회의실 목록 보여줘 / 내일 회의실A 14:00-15:00 예약해줘 / 오늘 예약 현황 알려줘" class="w-full bg-gray-800/50 rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-indigo-500 outline-none mb-3"></textarea>
+            <button onclick="toolChat('booking')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">질문하기</button>
+
+            <div id="booking-loading" class="loading items-center gap-2 mt-4"><div class="animate-spin h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full"></div><span class="text-sm">처리 중...</span></div>
+            <div id="booking-result" class="mt-4 p-4 rounded-lg bg-gray-800/50 text-sm hidden"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab management
+function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+    document.getElementById('panel-' + name).classList.remove('hidden');
+    document.getElementById('tab-' + name).classList.add('tab-active');
+}
+showTab('etl');
+
+// === ETL ===
+async function clearVectorStore() {
+    try {
+        const res = await fetch('/api/etl/clear', { method: 'DELETE' });
+        const data = await res.json();
+        document.getElementById('clear-result').textContent = data.message || data.error;
+    } catch (e) {
+        document.getElementById('clear-result').textContent = '오류: ' + e.message;
+    }
+}
+
+async function etlFromFile() {
+    const formData = new FormData();
+    formData.append('title', document.getElementById('etl-title').value);
+    formData.append('author', document.getElementById('etl-author').value);
+    formData.append('file', document.getElementById('etl-file').files[0]);
+
+    showLoading('etl');
+    try {
+        const res = await fetch('/api/etl/file', { method: 'POST', body: formData });
+        const data = await res.json();
+        showResult('etl', data.message || data.error);
+    } catch (e) {
+        showResult('etl', '오류: ' + e.message);
+    }
+}
+
+async function etlFromHtml() {
+    const formData = new FormData();
+    formData.append('title', document.getElementById('html-title').value);
+    formData.append('author', document.getElementById('html-author').value);
+    formData.append('url', document.getElementById('html-url').value);
+
+    showLoading('etl');
+    try {
+        const res = await fetch('/api/etl/html', { method: 'POST', body: formData });
+        const data = await res.json();
+        showResult('etl', data.message || data.error);
+    } catch (e) {
+        showResult('etl', '오류: ' + e.message);
+    }
+}
+
+// === RAG ===
+async function ragChat() {
+    const body = {
+        question: document.getElementById('rag-question').value,
+        score: parseFloat(document.getElementById('rag-score').value),
+        source: document.getElementById('rag-source').value,
+        conversationId: document.getElementById('rag-conversation-id').value,
+        ragType: document.getElementById('rag-type').value
+    };
+
+    showLoading('rag');
+    try {
+        const res = await fetch('/api/rag/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        showResult('rag', data.answer || data.error);
+    } catch (e) {
+        showResult('rag', '오류: ' + e.message);
+    }
+}
+
+// === Tool Calling ===
+async function toolChat(type) {
+    let body = {};
+    let url = '/api/tool/' + type;
+
+    if (type === 'datetime') {
+        body = { question: document.getElementById('dt-question').value };
+    } else if (type === 'weather') {
+        body = { question: document.getElementById('weather-question').value };
+    } else if (type === 'booking') {
+        body = {
+            question: document.getElementById('booking-question').value,
+            userName: document.getElementById('booking-username').value
+        };
+    }
+
+    showLoading(type === 'datetime' ? 'dt' : type);
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        showResult(type === 'datetime' ? 'dt' : type, data.answer || data.error);
+    } catch (e) {
+        showResult(type === 'datetime' ? 'dt' : type, '오류: ' + e.message);
+    }
+}
+
+// === Helpers ===
+function showLoading(prefix) {
+    document.getElementById(prefix + '-loading').classList.add('show');
+    document.getElementById(prefix + '-result').classList.add('hidden');
+}
+
+function showResult(prefix, text) {
+    document.getElementById(prefix + '-loading').classList.remove('show');
+    const el = document.getElementById(prefix + '-result');
+    el.innerHTML = text;
+    el.classList.remove('hidden');
+}
+</script>
+</body>
+</html>
