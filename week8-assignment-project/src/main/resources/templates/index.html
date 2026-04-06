@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparta AI BookStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ─── Light Theme ─── */
+        :root, [data-theme="light"] {
+            --bg: #f8f9fa; --surface: #ffffff; --surface-alt: #f1f3f5;
+            --border: #dee2e6; --border-light: #e9ecef;
+            --text: #212529; --text-sub: #6c757d; --text-muted: #adb5bd;
+            --accent: #4f46e5; --accent-light: #6366f1; --accent-bg: #eef2ff;
+            --green: #16a34a; --green-bg: #f0fdf4;
+            --orange: #ea580c; --orange-bg: #fff7ed;
+            --red: #dc2626; --red-bg: #fef2f2;
+            --yellow: #ca8a04; --yellow-bg: #fefce8;
+            --header-bg: #1e1b4b; --header-text: #e0e7ff; --header-text-active: #ffffff;
+            --header-border: #312e81;
+            --footer-bg: #1e1b4b; --footer-text: #a5b4fc; --footer-text-bright: #e0e7ff;
+            --modal-overlay: rgba(0,0,0,0.45);
+            --chat-ai-bg: var(--surface-alt);
+        }
+        /* ─── Dark Theme ─── */
+        [data-theme="dark"] {
+            --bg: #111827; --surface: #1f2937; --surface-alt: #283040;
+            --border: #374151; --border-light: #2d3748;
+            --text: #f3f4f6; --text-sub: #9ca3af; --text-muted: #6b7280;
+            --accent: #818cf8; --accent-light: #a5b4fc; --accent-bg: rgba(99,102,241,0.15);
+            --green: #4ade80; --green-bg: rgba(74,222,128,0.1);
+            --orange: #fb923c; --orange-bg: rgba(251,146,60,0.1);
+            --red: #f87171; --red-bg: rgba(248,113,113,0.1);
+            --yellow: #facc15; --yellow-bg: rgba(250,204,21,0.1);
+            --header-bg: #0f0e2a; --header-text: #a5b4fc; --header-text-active: #e0e7ff;
+            --header-border: #1e1b4b;
+            --footer-bg: #0f0e2a; --footer-text: #6b7280; --footer-text-bright: #9ca3af;
+            --modal-overlay: rgba(0,0,0,0.7);
+            --chat-ai-bg: var(--surface-alt);
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+        body { background: var(--bg); font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: var(--text); margin: 0; }
+        .surface { background: var(--surface); border: 1px solid var(--border); }
+        .surface:hover { border-color: var(--text-muted); }
+        .input { background: var(--surface); border: 1px solid var(--border); color: var(--text); transition: all 0.15s; }
+        .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+        .input::placeholder { color: var(--text-muted); }
+        .btn-primary { background: var(--accent); color: #fff; font-weight: 600; transition: all 0.15s; }
+        .btn-primary:hover { background: var(--accent-light); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-sub); font-weight: 500; transition: all 0.15s; }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+        .btn-ghost.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+        .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
+        .chip-genre { background: var(--accent-bg); color: var(--accent); }
+        .chip-event { background: var(--orange-bg); color: var(--orange); }
+        .chip-stock { background: var(--green-bg); color: var(--green); }
+        .chip-soldout { background: var(--red-bg); color: var(--red); }
+        .chip-low { background: var(--yellow-bg); color: var(--yellow); }
+        .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.5s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .book-card { cursor: pointer; transition: all 0.2s; }
+        .book-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .book-cover { width: 100%; aspect-ratio: 3/4; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.5rem; color: #fff; }
+        .modal-overlay { position: fixed; inset: 0; background: var(--modal-overlay); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: var(--surface); border-radius: 16px; max-width: 680px; width: 95%; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .chat-user { background: var(--accent-bg); border-radius: 16px 16px 4px 16px; }
+        .chat-ai { background: var(--chat-ai-bg); border-radius: 16px 16px 16px 4px; }
+        .nav-tab { position: relative; color: var(--header-text); font-weight: 500; transition: all 0.15s; padding-bottom: 12px; }
+        .nav-tab:hover { color: var(--header-text-active); }
+        .nav-tab.active { color: var(--header-text-active); font-weight: 700; }
+        .nav-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent-light); border-radius: 1px; }
+        .star { color: #eab308; }
+        .price-tag { font-weight: 700; color: var(--text); }
+        .review-skeleton { background: linear-gradient(90deg, var(--surface-alt) 25%, var(--border-light) 50%, var(--surface-alt) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; height: 80px; }
+        @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .review-star { font-size: 0.7rem; }
+
+        /* Header */
+        .site-header { background: var(--header-bg); border-bottom: 1px solid var(--header-border); }
+        .theme-toggle { background: transparent; border: 1px solid var(--header-border); color: var(--header-text); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.08); border-color: var(--header-text); }
+
+        /* Footer */
+        .site-footer { background: var(--footer-bg); border-top: 1px solid var(--header-border); color: var(--footer-text); }
+        .site-footer a { color: var(--footer-text-bright); text-decoration: none; transition: color 0.15s; }
+        .site-footer a:hover { color: #fff; }
+
+        /* Event card in modal (dark mode friendly) */
+        .event-card { background: var(--orange-bg); border: 1px solid var(--orange); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+        .review-card { background: var(--surface-alt); border-radius: 8px; padding: 16px; margin-bottom: 8px; }
+
+        /* Chat surface border in dark */
+        [data-theme="dark"] .chat-surface-border { border-color: var(--border); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="site-header sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
+        <div class="flex items-center gap-2.5 cursor-pointer" onclick="navigate('explore')">
+            <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            </div>
+            <span class="font-bold text-base tracking-tight" style="color: var(--header-text-active);">Sparta AI BookStore</span>
+        </div>
+        <nav class="flex gap-8">
+            <button onclick="navigate('explore')" id="nav-explore" class="nav-tab active text-sm">도서 탐색</button>
+            <button onclick="navigate('chat')" id="nav-chat" class="nav-tab text-sm">AI 추천</button>
+        </nav>
+        <div class="flex items-center">
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="테마 전환">
+                <svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8 flex-1">
+
+    <!-- PAGE: 도서 탐색 -->
+    <div id="page-explore">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight mb-1">오늘, 어떤 책을 만날까요?</h1>
+            <p style="color: var(--text-sub);" class="text-sm">20권의 엄선된 도서를 탐색하고, AI에게 맞춤 추천을 받아보세요.</p>
+        </div>
+
+        <div class="flex gap-2 mb-6 flex-wrap" id="genre-filters">
+            <button onclick="loadBooks('')" class="btn-ghost active rounded-full px-4 py-1.5 text-xs" data-genre="">전체</button>
+            <button onclick="loadBooks('프로그래밍')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="프로그래밍">프로그래밍</button>
+            <button onclick="loadBooks('인공지능')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="인공지능">인공지능</button>
+            <button onclick="loadBooks('데이터')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="데이터">데이터</button>
+            <button onclick="loadBooks('과학')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="과학">과학</button>
+            <button onclick="loadBooks('소설')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="소설">소설</button>
+            <button onclick="loadBooks('자기계발')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="자기계발">자기계발</button>
+            <button onclick="loadBooks('비즈니스')" class="btn-ghost rounded-full px-4 py-1.5 text-xs" data-genre="비즈니스">비즈니스</button>
+        </div>
+
+        <div id="books-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+    </div>
+
+    <!-- PAGE: AI 추천 채팅 -->
+    <div id="page-chat" class="hidden">
+        <div class="max-w-3xl mx-auto">
+            <div class="surface chat-surface-border rounded-2xl overflow-hidden" style="height: calc(100vh - 200px); display: flex; flex-direction: column;">
+                <div class="px-6 py-4 border-b chat-surface-border flex items-center justify-between" style="border-color: var(--border-light);">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background: var(--accent-bg);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">AI 도서 추천</p>
+                            <p class="text-xs" style="color: var(--text-muted);">리뷰 검색 · 재고/가격 조회 · 이벤트 안내</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs" style="color: var(--text-muted);">세션</span>
+                        <input type="text" id="chat-convid" value="user-1" class="input rounded-md px-2 py-1 text-xs w-20 text-center">
+                    </div>
+                </div>
+
+                <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-5 space-y-4 scrollbar-hide">
+                    <div class="text-center py-16">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: var(--accent-bg);">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>
+                        </div>
+                        <p class="font-semibold mb-1" style="color: var(--text);">무엇을 읽고 싶으세요?</p>
+                        <p class="text-xs leading-relaxed max-w-sm mx-auto" style="color: var(--text-muted);">관심 분야를 말씀해주시면 리뷰를 검색하고,<br>재고와 가격, 진행 중인 이벤트까지 확인해 드릴게요.</p>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4" style="border-top: 1px solid var(--border-light);">
+                    <div class="flex gap-2 mb-3 flex-wrap">
+                        <button onclick="quickChat('자바 입문자인데 실무에 도움되는 프로그래밍 책 추천해줘')" class="btn-ghost rounded-full px-3 py-1 text-xs">자바 입문 추천</button>
+                        <button onclick="quickChat('AI/머신러닝 분야에서 지금 살 수 있는 책 추천해줘')" class="btn-ghost rounded-full px-3 py-1 text-xs">AI 분야 추천</button>
+                        <button onclick="quickChat('이펙티브 자바 리뷰 찾아보고 가격이랑 이벤트도 알려줘')" class="btn-ghost rounded-full px-3 py-1 text-xs">이펙티브 자바 상세</button>
+                        <button onclick="quickChat('인생이 바뀌는 자기계발서 3권 추천해줘')" class="btn-ghost rounded-full px-3 py-1 text-xs">자기계발 추천</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" class="input flex-1 rounded-xl px-4 py-3 text-sm"
+                               placeholder="예: 클린 코드 리뷰 찾아보고, 재고랑 이벤트도 알려줘" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing)sendChat()">
+                        <button onclick="sendChat()" id="chat-btn" class="btn-primary rounded-xl px-5 text-sm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="max-w-6xl mx-auto px-6 py-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    </div>
+                    <span class="font-bold text-sm" style="color: var(--footer-text-bright);">Sparta AI BookStore</span>
+                </div>
+                <p class="text-xs leading-relaxed" style="max-width: 280px;">AI 기반 맞춤 도서 추천 서비스. RAG, Tool Calling, Chat Memory를 활용한 지능형 도서 에이전트입니다.</p>
+            </div>
+            <div>
+                <h4 class="text-xs font-semibold mb-3 uppercase tracking-wider" style="color: var(--footer-text-bright);">서비스</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a href="javascript:navigate('explore')">도서 탐색</a></li>
+                    <li><a href="javascript:navigate('chat')">AI 도서 추천</a></li>
+                    <li><a href="javascript:void(0)">신간 알림</a></li>
+                    <li><a href="javascript:void(0)">이벤트 안내</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-semibold mb-3 uppercase tracking-wider" style="color: var(--footer-text-bright);">기술 스택</h4>
+                <ul class="space-y-2 text-xs">
+                    <li>Spring AI 2.0 + Tool Calling</li>
+                    <li>PGVector + RAG</li>
+                    <li>Naver 검색 API</li>
+                    <li>Chat Memory</li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-6" style="border-top: 1px solid var(--header-border);">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-xs">&copy; 2026 Sparta AI BookStore.</p>
+                <div class="flex items-center gap-4 text-xs">
+                    <a href="javascript:void(0)">이용약관</a>
+                    <a href="javascript:void(0)">개인정보처리방침</a>
+                    <a href="javascript:void(0)">고객센터</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- MODAL: 도서 상세 -->
+<div id="book-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div id="modal-body" class="p-8"></div>
+    </div>
+</div>
+
+<script>
+/* ─── Theme Toggle ─── */
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('icon-sun').style.display = theme === 'dark' ? 'block' : 'none';
+    document.getElementById('icon-moon').style.display = theme === 'dark' ? 'none' : 'block';
+    localStorage.setItem('theme', theme);
+}
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+}
+// 초기 테마 적용 (시스템 설정 존중)
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved) { applyTheme(saved); }
+    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { applyTheme('dark'); }
+    else { applyTheme('light'); }
+})();
+
+/* ─── Helpers ─── */
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+function comma(n) { return n != null ? Number(n).toLocaleString('ko-KR') : '0'; }
+
+async function api(url, body, method = 'POST') {
+    const opts = { method, headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
+    return r.json();
+}
+
+const GENRE_COLORS = {
+    '프로그래밍': ['#4f46e5','#818cf8'], '인공지능': ['#7c3aed','#a78bfa'],
+    '데이터': ['#0891b2','#22d3ee'], '과학': ['#059669','#34d399'],
+    '소설': ['#db2777','#f472b6'], '자기계발': ['#ea580c','#fb923c'],
+    '비즈니스': ['#ca8a04','#facc15']
+};
+function genreGrad(genre) {
+    const c = GENRE_COLORS[genre] || ['#6b7280','#9ca3af'];
+    return `linear-gradient(135deg, ${c[0]}, ${c[1]})`;
+}
+
+function stockChip(stock) {
+    if (stock === 0) return '<span class="chip chip-soldout">품절</span>';
+    if (stock <= 5) return `<span class="chip chip-low">재고 ${stock}권</span>`;
+    return `<span class="chip chip-stock">재고 ${stock}권</span>`;
+}
+
+function stars(rating) {
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5 ? 1 : 0;
+    return '<span class="star">' + '&#9733;'.repeat(full) + (half ? '&#9734;' : '') + '</span> <span style="color:var(--text-muted);" class="text-xs">' + rating.toFixed(1) + '</span>';
+}
+
+function miniStars(rating) {
+    const full = Math.floor(rating);
+    return '<span class="star review-star">' + '&#9733;'.repeat(full) + '</span> <span style="color:var(--text-muted); font-size:0.65rem;">' + rating.toFixed(1) + '</span>';
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ─── Navigation ─── */
+function navigate(page) {
+    ['explore','chat'].forEach(p => {
+        document.getElementById('page-' + p).classList.toggle('hidden', p !== page);
+        document.getElementById('nav-' + p).classList.toggle('active', p === page);
+    });
+    if (page === 'explore') loadBooks('');
+}
+
+/* ─── Books Grid ─── */
+let bookEventsCache = {};
+
+async function loadBooks(genre) {
+    document.querySelectorAll('#genre-filters button').forEach(b => b.classList.toggle('active', b.dataset.genre === genre));
+    const el = document.getElementById('books-grid');
+    el.innerHTML = '<div class="col-span-full flex justify-center py-16"><span class="spinner"></span></div>';
+    try {
+        const url = genre ? `/api/books/genre/${encodeURIComponent(genre)}` : '/api/books';
+        const r = await fetch(url);
+        const books = await r.json();
+        if (!books.length) { el.innerHTML = '<p class="col-span-full text-center py-16 text-sm" style="color:var(--text-muted);">해당 장르의 도서가 없습니다.</p>'; return; }
+
+        el.innerHTML = books.map(b => `
+            <div class="book-card fade-in" onclick="openBookDetail(${b.id})">
+                <div class="book-cover mb-3" style="background: ${genreGrad(b.genre)}">
+                    <span class="text-white/90 text-center px-3 text-sm font-semibold leading-tight">${esc(b.title.length > 12 ? b.title.substring(0,12)+'...' : b.title)}</span>
+                </div>
+                <div>
+                    <div id="event-badge-${b.id}" class="mb-1.5" style="min-height:22px;"></div>
+                    <p class="font-semibold text-sm leading-snug mb-0.5" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(b.title)}</p>
+                    <p class="text-xs mb-2" style="color:var(--text-muted);">${esc(b.author)}</p>
+                    <div class="flex items-baseline gap-1.5 mb-1.5">
+                        <span class="price-tag text-sm">${comma(b.price)}원</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs">${stars(b.rating)}</span>
+                    </div>
+                    <div class="mt-1.5">${stockChip(b.stock)}</div>
+                </div>
+            </div>
+        `).join('');
+
+        books.forEach(b => loadBookEventBadge(b.id));
+    } catch (e) { el.innerHTML = `<p class="text-sm col-span-full text-center py-8" style="color:var(--red);">${esc(e.message)}</p>`; }
+}
+
+async function loadBookEventBadge(bookId) {
+    try {
+        const events = await fetch(`/api/books/${bookId}/events`).then(r => r.json());
+        bookEventsCache[bookId] = events;
+        const el = document.getElementById(`event-badge-${bookId}`);
+        if (el && events.length > 0) {
+            el.innerHTML = '<span class="chip chip-event">이벤트</span>';
+        }
+    } catch(e) { /* silent */ }
+}
+
+/* ─── Book Detail Modal ─── */
+async function openBookDetail(id) {
+    const modal = document.getElementById('book-modal');
+    const body = document.getElementById('modal-body');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    body.innerHTML = '<div class="flex justify-center py-16"><span class="spinner"></span></div>';
+
+    try {
+        const book = await fetch(`/api/books/${id}`).then(r => r.json());
+        const stockLabel = book.stock === 0 ? '<span class="chip chip-soldout">품절</span>'
+            : book.stock <= 5 ? `<span class="chip chip-low">재고 ${book.stock}권 — 서두르세요!</span>`
+            : `<span class="chip chip-stock">재고 ${book.stock}권</span>`;
+
+        body.innerHTML = `
+            <div class="flex gap-6 mb-6">
+                <div class="book-cover shrink-0" style="width:140px; min-height:190px; background: ${genreGrad(book.genre)}; border-radius: 12px; font-size: 1rem;">
+                    <span class="text-white/90 text-center px-3 text-sm font-semibold leading-tight">${esc(book.title.length > 16 ? book.title.substring(0,16)+'...' : book.title)}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex gap-1 mb-2 flex-wrap">
+                        <span class="chip chip-genre">${esc(book.genre)}</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-1 mb-1 leading-snug">${esc(book.title)}</h3>
+                    <p class="text-sm mb-3" style="color:var(--text-sub);">${esc(book.author)} · ${book.publishedYear}년 · ISBN ${esc(book.isbn || '-')}</p>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs">${stars(book.rating)}</span>
+                    </div>
+                    <div class="flex items-baseline gap-3 mb-2">
+                        <span class="price-tag text-xl">${comma(book.price)}원</span>
+                        ${stockLabel}
+                    </div>
+                    <div id="modal-events-inline"></div>
+                </div>
+            </div>
+            <!-- 이벤트 섹션 -->
+            <div id="modal-events" class="mb-6"></div>
+            <div class="pt-5 mb-6" style="border-top: 1px solid var(--border-light);">
+                <h4 class="font-semibold text-sm mb-2">책 소개</h4>
+                <p class="text-sm leading-relaxed" style="color:var(--text-sub);">${esc(book.description)}</p>
+            </div>
+            <div class="pt-5" style="border-top: 1px solid var(--border-light);">
+                <h4 class="font-semibold text-sm mb-3">독자 리뷰</h4>
+                <div id="review-section">
+                    <div class="review-skeleton mb-2"></div>
+                    <div class="review-skeleton mb-2" style="height:60px"></div>
+                    <p class="text-xs mt-2" style="color:var(--text-muted);">리뷰를 불러오고 있습니다...</p>
+                </div>
+            </div>
+            <div class="pt-5 mt-6" style="border-top: 1px solid var(--border-light);">
+                <h4 class="font-semibold text-sm mb-3">인터넷 서평 검색</h4>
+                <div id="web-review-section">
+                    <div class="review-skeleton mb-2"></div>
+                    <p class="text-xs mt-2" style="color:var(--text-muted);">인터넷에서 서평을 검색하고 있습니다...</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6 pt-5" style="border-top: 1px solid var(--border-light);">
+                <button onclick="askAiAbout('${esc(book.title).replace(/'/g,"\\'")}')" class="btn-primary rounded-xl px-5 py-2.5 text-sm flex-1">AI에게 이 책 추천 물어보기</button>
+                <button onclick="closeModal()" class="btn-ghost rounded-xl px-5 py-2.5 text-sm">닫기</button>
+            </div>`;
+
+        loadModalEvents(id);
+        loadReviews(id);
+        loadWebReviews(id);
+    } catch (e) {
+        body.innerHTML = `<p class="text-sm py-8 text-center" style="color:var(--red);">${esc(e.message)}</p>
+            <button onclick="closeModal()" class="btn-ghost rounded-xl px-5 py-2.5 text-sm mx-auto block mt-4">닫기</button>`;
+    }
+}
+
+async function loadModalEvents(bookId) {
+    try {
+        const events = await fetch(`/api/books/${bookId}/events`).then(r => r.json());
+        const el = document.getElementById('modal-events');
+        if (!el || events.length === 0) return;
+
+        el.innerHTML = events.map(ev => `
+            <div class="event-card fade-in">
+                <div class="flex items-center gap-2 mb-1">
+                    <span style="color:var(--orange);" class="font-semibold text-sm">&#127881; ${esc(ev.eventName)}</span>
+                    ${ev.discountPercent ? `<span class="chip chip-event">${ev.discountPercent}% 할인</span>` : ''}
+                </div>
+                <p class="text-xs" style="color:var(--orange);">${esc(ev.description || '')}</p>
+                <p class="text-xs mt-1" style="color:var(--text-muted);">${formatDate(ev.startDate)} ~ ${formatDate(ev.endDate)}</p>
+            </div>
+        `).join('');
+    } catch(e) { /* silent */ }
+}
+
+async function loadReviews(bookId) {
+    const el = document.getElementById('review-section');
+    try {
+        const r = await fetch(`/api/books/${bookId}/reviews`);
+        const reviews = await r.json();
+
+        if (!reviews || reviews.length === 0) {
+            el.innerHTML = '<p class="text-sm" style="color:var(--text-muted);">등록된 리뷰가 없습니다.</p>';
+            return;
+        }
+
+        el.innerHTML = reviews.map(rv => `
+            <div class="review-card fade-in">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-sm">${esc(rv.reviewerName)}</span>
+                        <span class="chip chip-genre" style="font-size:0.6rem;">${esc(rv.source)}</span>
+                    </div>
+                    <div class="flex items-center gap-1">${miniStars(rv.rating)}</div>
+                </div>
+                <p class="text-xs leading-relaxed" style="color:var(--text-sub);">${esc(rv.content)}</p>
+                <p class="text-xs mt-1.5" style="color:var(--text-muted);">${formatDate(rv.createdAt)}</p>
+            </div>
+        `).join('');
+    } catch (e) {
+        el.innerHTML = `<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:8px;padding:16px;"><p class="text-xs" style="color:var(--red);">${esc(e.message)}</p></div>`;
+    }
+}
+
+async function loadWebReviews(bookId) {
+    const el = document.getElementById('web-review-section');
+    try {
+        const r = await fetch(`/api/books/${bookId}/web-reviews`);
+        const text = await r.text();
+        let reviewText = text;
+        try { reviewText = JSON.parse(text); } catch(e) {}
+
+        if (!reviewText || (typeof reviewText === 'string' && (reviewText.includes('UnsupportedOperation') || reviewText.includes('TODO')))) {
+            el.innerHTML = `<div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:8px;padding:16px;">
+                <p class="text-sm font-medium mb-1" style="color:var(--yellow);">TODO 미구현</p>
+                <p class="text-xs" style="color:var(--yellow);">BookReviewSearchTools.searchBookReview() 도구를 구현하면 여기에 인터넷 서평이 표시됩니다.</p>
+            </div>`;
+            return;
+        }
+        if (typeof reviewText === 'object' && reviewText.error) {
+            el.innerHTML = `<div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:8px;padding:16px;">
+                <p class="text-sm font-medium mb-1" style="color:var(--yellow);">TODO 미구현</p>
+                <p class="text-xs" style="color:var(--yellow);">${esc(reviewText.error)}</p>
+            </div>`;
+            return;
+        }
+        if (typeof reviewText === 'string' && reviewText.includes('검색 결과가 없습니다')) {
+            el.innerHTML = '<p class="text-sm" style="color:var(--text-muted);">검색된 서평이 없습니다.</p>';
+            return;
+        }
+
+        const reviews = String(reviewText).split(/\[\d+\]/).filter(s => s.trim());
+        if (reviews.length === 0) {
+            el.innerHTML = `<p class="text-sm" style="color:var(--text-sub);">${esc(String(reviewText))}</p>`;
+            return;
+        }
+        el.innerHTML = reviews.map(review => {
+            const lines = review.trim().split('\n').filter(l => l.trim());
+            const title = lines[0] || '';
+            const url = lines[1] || '';
+            const snippet = lines.slice(2).join(' ') || '';
+            return `<div class="review-card fade-in">
+                <p class="font-medium text-sm mb-1">${esc(title)}</p>
+                <p class="text-xs leading-relaxed mb-1.5" style="color:var(--text-sub);">${esc(snippet)}</p>
+                ${url.startsWith('http') ? `<a href="${esc(url)}" target="_blank" rel="noopener" class="text-xs hover:underline" style="color:var(--accent);">원문 보기 &#8599;</a>` : ''}
+            </div>`;
+        }).join('');
+    } catch (e) {
+        el.innerHTML = `<div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:8px;padding:16px;">
+            <p class="text-sm font-medium mb-1" style="color:var(--yellow);">TODO 미구현</p>
+            <p class="text-xs" style="color:var(--yellow);">BookReviewSearchTools.searchBookReview() 도구를 구현하면 여기에 인터넷 서평이 표시됩니다.</p>
+        </div>`;
+    }
+}
+
+function closeModal() {
+    document.getElementById('book-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function askAiAbout(title) {
+    closeModal();
+    navigate('chat');
+    document.getElementById('chat-input').value = `"${title}" 책에 대해 리뷰 찾아보고, 가격이랑 이벤트도 알려줘`;
+    sendChat();
+}
+
+/* ─── Chat ─── */
+let chatStarted = false;
+function appendMsg(role, html, isHtml = false) {
+    const el = document.getElementById('chat-messages');
+    if (!chatStarted) { el.innerHTML = ''; chatStarted = true; }
+    const cls = role === 'user' ? 'chat-user' : 'chat-ai';
+    const align = role === 'user' ? 'ml-auto max-w-[85%]' : 'mr-auto max-w-[90%]';
+    const content = isHtml ? html : esc(html);
+    el.innerHTML += `<div class="${cls} ${align} px-4 py-3 fade-in">
+        ${role === 'ai' ? '<p class="text-xs mb-1.5 font-medium flex items-center gap-1" style="color:var(--text-muted);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> AI 추천</p>' : ''}
+        <div class="text-sm leading-relaxed">${content}</div>
+    </div>`;
+    el.scrollTop = el.scrollHeight;
+}
+
+function quickChat(msg) {
+    document.getElementById('chat-input').value = msg;
+    sendChat();
+}
+
+async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim(); if (!msg) return;
+    const convId = document.getElementById('chat-convid').value || 'default';
+    const btn = document.getElementById('chat-btn');
+    input.value = '';
+    btn.disabled = true;
+    appendMsg('user', msg);
+    appendMsg('ai', '<div class="flex items-center gap-2" style="color:var(--text-muted);"><span class="spinner"></span> <span class="text-xs">도구를 호출하며 추천을 준비하고 있어요...</span></div>', true);
+    try {
+        const data = await api('/api/chat', { message: msg, conversationId: convId });
+        const msgs = document.getElementById('chat-messages');
+        const lastAi = msgs.lastElementChild.querySelector('div:last-child');
+        lastAi.innerHTML = data.answer;
+    } catch (e) {
+        const msgs = document.getElementById('chat-messages');
+        const lastAi = msgs.lastElementChild.querySelector('div:last-child');
+        lastAi.innerHTML = `<p class="text-sm" style="color:var(--red);">${esc(e.message)}</p>`;
+    }
+    btn.disabled = false;
+}
+
+loadBooks('');
+</script>
+</body>
+</html>
